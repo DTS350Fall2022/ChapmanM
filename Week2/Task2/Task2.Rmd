@@ -1,0 +1,103 @@
+---
+title: "Task2"
+author: "matthewchapman"
+date: "2022-09-01"
+output: 
+  html_document:
+    theme: cosmo
+    keep_md: true 
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+library(knitr)
+
+```{r}
+sin(pi/4)
+```
+# I created a sin() function and then inside the parentheses I calculated pi/4
+
+```{r}
+x <- 10/3
+```
+#This code block assigns x to 10/3
+#Acceptable Names: Name1, name_1, name.1, NameOne
+#Unacceptable Names: Name!, Name 1, name-1
+#Names may only contain numbers, letters, underscores, and periods
+
+```{r}
+MySequence <- seq(1,50,length.out=7)
+```
+#I assigned MySequence to a sequence of 7 evenly spaced numbers from 1 to 50
+
+```{r}
+my_vector <- c(1,5,12,31,19)
+```
+#I created a vector called my_vector and assigned the numbers above to it
+
+```{r}
+7 + 5 == 12
+```
+#I used the == comparison operator for 7+5=12. The operator checked if 7+5==12 and returned True
+
+```{r}
+(7 + 4 = 12) | (5 - 4 = 1)
+```
+#Error: Error in 7 + 4 = 12 : target of assignment expands to non-language object
+#This code is supposed to return True if any of the arguements is correct. However it responded with an error due to using = instead of ==
+
+```{r}
+my_variable <- 10
+my_varıable
+```
+#This code does not work because the is no dot in the i when my_variable is called
+#ı vs i
+
+
+
+```{r eval=FALSE}
+library(tidyverse)
+
+ggplot(dota = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy))
+
+fliter(mpg, cyl = 8)
+filter(diamond, carat > 3)
+```
+
+
+```{r eval=TRUE}
+library(tidyverse)
+
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy))
+
+filter(mpg, cyl = 8)
+filter(diamonds, carat > 3)
+```
+#I fixed the typo in data in line 94, filter in line 97, and diamonds in line 98
+
+
+#4.3: Alt+Shift+K prompts a menu with shortcuts. It can also be found by going to Tools
