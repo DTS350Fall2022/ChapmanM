@@ -1,0 +1,84 @@
+---
+title: "Task4"
+author: "matthewchapman"
+date: "2022-09-08"
+output: 
+  html_document:
+    keep_md: TRUE
+---
+#Convert iris data to a tibble called iris_data
+```{r}
+library("tibble")
+library("dplyr")
+data("iris")
+class(iris)
+
+iris_data <- as_data_frame(iris)
+class(iris_data)
+iris_data
+```
+
+
+#Arrange the iris data by Sepal.Length and display the first ten rows.
+```{r}
+arrange(iris_data, Sepal.Length)
+```
+
+
+#Select the Species and Petal.Width columns and put them into a new data set called testdat.
+```{r}
+testdat <- select(iris, Species, Petal.Width)
+testdat
+```
+
+
+#Create a new table called species_mean that has the mean for each variable for each Species.
+```{r}
+species_mean <- group_by(iris, Species)
+species_mean <- summarise(species_mean, Petal.Length = mean(Petal.Length, na.rm = TRUE), Petal.Width = mean(Petal.Width, na.rm = TRUE), Sepal.Length = mean(Sepal.Length, na.rm = TRUE), Sepal.Width = mean(Sepal.Width, na.rm = TRUE))
+species_mean
+```
+
+
+#Create a data frame called iris_min with only the observations with at least 3 for Sepal.Width and not 2.5 for Petal.Width.
+```{r}
+iris_min <- filter(iris_data, Sepal.Width >= 3, Petal.Width != 2.5)
+iris_min
+```
+
+
+#Create a data frame called iris_size with a column Sepal.Size
+```{r}
+iris_size <- 
+  mutate(iris_data, Sepal.Size= case_when(
+    Sepal.Length < 5 ~ "small",
+    Sepal.Length >= 5 & Sepal.Length <6.5 ~ "medium",
+    Sepal.Length >= 6.5 ~ "large"
+  )
+  )
+iris_size
+```
+
+
+#Create a data frame called iris_rank which ranks all of the data by Petal.Length, where a ranking of 1 is the largest Petal.Length and order by ranking.
+```{r}
+iris_rank <-
+  mutate(iris_data, ranking = max_rank(Petal.Length))
+iris_rank
+```
+
+
+#Read about the ?summarize_all() function and get a new table with the means and standard deviations for each species.
+```{r}
+iris3 <- iris %>%
+  group_by(Species) %>%
+  summarise_all(list(mean, sd))
+iris3
+```
+
+
+#Questions:
+#1. What part of the country has the cheapest cost of living and has the most major cities within 200 miles?
+#2. Where is the best place to live working in tech?
+#3. Is there going to be another bad COVID outbreak?
+#4. Are major corporations loss prevention systems worth it?

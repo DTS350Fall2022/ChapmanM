@@ -37,8 +37,9 @@ iris_rank <-
 iris_rank
 
 
-iris3 <-
-  summarise_at(iris, c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width"), (mean), na.rm = TRUE)
-iris2 <-
-  summarise_at(iris, c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width"), (sd), na.rm = TRUE)
+iris3 <- iris %>%
+  group_by(Species) %>%
+  summarise_all(list(mean, sd))
+iris3
+
 
