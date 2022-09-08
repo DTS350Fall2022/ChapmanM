@@ -36,6 +36,9 @@ iris_rank <-
   mutate(iris_data, ranking = max_rank(Petal.Length))
 iris_rank
 
-by_species <- summarise_at(iris_dat)
 
+iris3 <-
+  summarise_at(iris, c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width"), (mean), na.rm = TRUE)
+iris2 <-
+  summarise_at(iris, c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width"), (sd), na.rm = TRUE)
 
