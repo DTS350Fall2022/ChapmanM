@@ -5,16 +5,15 @@ class(iris)
 iris_data <- as_data_frame(iris)
 class(iris_data)
 iris_data
-remove(iris)
 
 arrange(iris_data, Sepal.Length)
 
-testda <- select(iris_data, Species, Petal.Width)
-testda
-testdat <- as.data.frame(testda)
+testdat <- select(iris, Species, Petal.Width)
 testdat
 
-species_mean <- group_by(iris_data, Species)
+
+species_mean <- group_by(iris, Species)
+species_mean <- summarise(species_mean, Petal.Length = mean(Petal.Length, na.rm = TRUE), Petal.Width = mean(Petal.Width, na.rm = TRUE), Sepal.Length = mean(Sepal.Length, na.rm = TRUE), Sepal.Width = mean(Sepal.Width, na.rm = TRUE))
 species_mean
 
 
@@ -36,4 +35,7 @@ iris_size
 iris_rank <-
   mutate(iris_data, ranking = max_rank(Petal.Length))
 iris_rank
+
+by_species <- summarise_at(iris_dat)
+
 
