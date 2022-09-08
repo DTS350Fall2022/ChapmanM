@@ -33,9 +33,9 @@ iris_size
 
 
 iris_rank <-
-  mutate(iris_data, ranking = max_rank(Petal.Length))
+  arrange(iris, Petal.Length)
+  mutate(iris_rank, ranking = min_rank(desc(Petal.Length)))
 iris_rank
-
 
 iris3 <- iris %>%
   group_by(Species) %>%
