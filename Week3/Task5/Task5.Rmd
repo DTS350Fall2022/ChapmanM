@@ -39,6 +39,33 @@ BillboardData1 <-
   select(name:peak_rank)
 ```
 
+ALL names mentioned 6+ times & ALL bands mentioned 6+ times
+```{r}
+BillboardData2 <- 
+  group_by(BillboardData1, band) %>% 
+  mutate(count = n()) %>%
+  filter(count > 5, !is.na(band))
+BillboardData2
+```
+
+ALL bands mentioned 6+ times
+```{r}
+BillboardData3 <- 
+  group_by(BillboardData, band) %>% 
+  mutate(count = n()) %>%
+  filter(count > 5, !is.na(band))
+BillboardData3
+```
+
+ALL bands mentioned 6+ times & Excluding names mentioned 6+ times
+```{r}
+BillboardData4 <- 
+  group_by(BillboardData3, name) %>% 
+  mutate(count = n()) %>%
+  filter(count <= 5, !is.na(name))
+BillboardData4
+```
+
 
 Find the corresponding data in the data set for the top singers’ bands.
 ```{r}
@@ -48,13 +75,19 @@ BillboardData2 <-
   filter(count > 5, !is.na(band))
 ```
 
-Plot
+Plot1 Part1
 ```{r}
-
-ggplot(data = BillboardData2) +
+Plot1 <- ggplot(data = BillboardData2) +
   geom_point(mapping = aes(x = peak_date, y = peak_rank, color = name)) +
   geom_line(aes(x= peak_date, y = peak_rank, color = name)) + 
   facet_wrap(~ band, nrow = 4, scales = "free")
+```
+
+Plot1 Part2
+```{r}
+Plot1 +
+  geom_point(data = BillboardData4, mapping = aes(x = peak_date, y = peak_rank)) +
+  geom_line(data = BillboardData4, aes(x= peak_date, y = peak_rank))  
 ```
 
 TITANIC
