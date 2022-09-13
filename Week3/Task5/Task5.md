@@ -7,9 +7,6 @@ output:
     keep_md: TRUE
 code_folding: 'hide'
 ---
-
-
-
 Libraries
 
 ```r
@@ -32,23 +29,10 @@ library(downloader)
 library(readxl)
 ```
 
-Read Data
+BillboardData
 
 ```r
-SoloData <- read_csv("solo-artist-followers.csv")
-```
-
-```
-## Rows: 139 Columns: 5
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: ","
-## chr (5): name, band, followers, band_followers, follower_difference
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
-```
-
-```r
+download.file("https://raw.githubusercontent.com/DTS350Fall2022/ChapmanM/main/Week3/Task5/billboard-hits.csv","billboard-hits.csv")
 BillboardData <- read_csv("billboard-hits.csv")
 ```
 
@@ -64,7 +48,25 @@ BillboardData <- read_csv("billboard-hits.csv")
 ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 ```
 
-Yes Data imported correctly. I had to pull from git and use read_csv because it didn't work using the git URL. It was very easy to pull from git though.
+SoloData
+
+```r
+download.file("https://raw.githubusercontent.com/DTS350Fall2022/ChapmanM/main/Week3/Task5/solo-artist-followers.csv","solo-artist-followers.csv")
+SoloData <- read_csv("solo-artist-followers.csv")
+```
+
+```
+## Rows: 139 Columns: 5
+## ── Column specification ────────────────────────────────────────────────────────
+## Delimiter: ","
+## chr (5): name, band, followers, band_followers, follower_difference
+## 
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+```
+
+#Comment on Data Types:
+Yes, Data imported correctly. I had to use the github raw URL to make it work. When I look at each data set, it is a tibble.
 
 
 Remove singers who who do not have at least 6 times they had a top 100 hit.
@@ -96,8 +98,96 @@ ggplot(data = BillboardData2) +
   facet_wrap(~ band, nrow = 4, scales = "free")
 ```
 
-![](Task5_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
+![](Task5_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
 
+TITANIC
 
+```r
+download.file("https://raw.githubusercontent.com/rashida048/Datasets/master/titanic_data.csv","titanic_data.csv")
+TitanicData <- read_csv("titanic_data.csv")
+```
 
+```
+## Rows: 891 Columns: 12
+## ── Column specification ────────────────────────────────────────────────────────
+## Delimiter: ","
+## chr (5): Name, Sex, Ticket, Cabin, Embarked
+## dbl (7): PassengerId, Survived, Pclass, Age, SibSp, Parch, Fare
+## 
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+```
+
+CENSUS
+
+```r
+download.file("https://raw.githubusercontent.com/rashida048/Datasets/master/census.csv","census.csv")
+CensusData <- read_csv("census.csv")
+```
+
+```
+## Rows: 3193 Columns: 100
+## ── Column specification ────────────────────────────────────────────────────────
+## Delimiter: ","
+## chr  (2): STNAME, CTYNAME
+## dbl (98): SUMLEV, REGION, DIVISION, STATE, COUNTY, CENSUS2010POP, ESTIMATESB...
+## 
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+```
+
+MOVIE
+
+```r
+download.file("https://raw.githubusercontent.com/rashida048/Datasets/master/movie_dataset.csv","movie_dataset.csv")
+MovieData <- read_csv("movie_dataset.csv")
+```
+
+```
+## Rows: 4803 Columns: 24
+## ── Column specification ────────────────────────────────────────────────────────
+## Delimiter: ","
+## chr  (15): genres, homepage, keywords, original_language, original_title, ov...
+## dbl   (8): index, budget, id, popularity, revenue, runtime, vote_average, vo...
+## date  (1): release_date
+## 
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+```
+
+HOUSING PRICES
+
+```r
+download.file("https://raw.githubusercontent.com/rashida048/Datasets/master/home_data.csv","home_data.csv")
+HomeData <- read_csv("home_data.csv")
+```
+
+```
+## Rows: 21613 Columns: 21
+## ── Column specification ────────────────────────────────────────────────────────
+## Delimiter: ","
+## chr   (1): id
+## dbl  (19): price, bedrooms, bathrooms, sqft_living, sqft_lot, floors, waterf...
+## dttm  (1): date
+## 
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+```
+
+CREDIT CARD FRUAD DATA
+
+```r
+download.file("https://raw.githubusercontent.com/rashida048/Datasets/master/fraud_data.csv","fraud_data.csv")
+CCFruadData <- read_csv("fraud_data.csv")
+```
+
+```
+## Rows: 21693 Columns: 30
+## ── Column specification ────────────────────────────────────────────────────────
+## Delimiter: ","
+## dbl (30): V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, ...
+## 
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+```
 
