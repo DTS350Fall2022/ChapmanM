@@ -1,0 +1,60 @@
+---
+title: "Task5"
+author: "matthewchapman"
+date: "2022-09-13"
+output: 
+  html_document:
+    keep_md: TRUE
+code_folding: 'hide'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Libraries
+```{r}
+library(tidyverse)
+library(downloader)
+library(readxl)
+```
+
+Read Data
+```{r}
+SoloData <- read_csv("solo-artist-followers.csv")
+BillboardData <- read_csv("billboard-hits.csv")
+```
+
+Yes Data imported correctly. I had to pull from git and use read_csv because it didn't work using the git URL. It was very easy to pull from git though.
+
+
+Remove singers who who do not have at least 6 times they had a top 100 hit.
+```{r}
+BillboardData1 <- 
+  group_by(BillboardData, name) %>% 
+  mutate(count = n()) %>%
+  filter(count > 5) %>%
+  select(name:peak_rank)
+```
+
+
+Find the corresponding data in the data set for the top singers’ bands.
+```{r}
+BillboardData2 <- 
+  group_by(BillboardData1, band) %>% 
+  mutate(count = n()) %>%
+  filter(count > 5, !is.na(band))
+```
+
+Plot
+```{r}
+
+ggplot(data = BillboardData2) +
+  geom_point(mapping = aes(x = peak_date, y = peak_rank, color = name)) +
+  geom_line(aes(x= peak_date, y = peak_rank, color = name)) + 
+  facet_wrap(~ band, nrow = 4, scales = "free")
+```
+
+
+
+
