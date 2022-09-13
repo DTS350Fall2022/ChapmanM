@@ -2,29 +2,51 @@
 title: "CS3"
 author: "matthewchapman"
 date: "2022-09-13"
-output: html_document
+output: 
+html_document:
+  keep_md: TRUE
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+Install Packages/Libraries
+```{r}
+library(gapminder)
+library(tidyverse)
+library(ggplot2)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+Plot1
+```{r}
+ggplot(data = gapminder) + 
+  geom_point(mapping = aes(x = lifeExp, y = gdpPercap, color = continent, size = pop)) +
+  scale_y_continuous(trans = "sqrt") +
+  facet_wrap(~ year, nrow = 1) +
+  theme_bw() +
+  ylim(0, 50000)
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+New Data Set With Weighted Mean of GDP
+```{r}
+gapminder <- group_by(gapminder, continent, year)
+WMGDP <- summarise(gapminder,
+                   WM = weighted.mean(gdpPercap),
+                   population1 = sum(pop)
+)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Plot2 Part1
+```{r}
+Plot2 <- ggplot(data = gapminder) + 
+  geom_point(mapping = aes(x = year, y = gdpPercap, color = continent, size = pop)) +
+  facet_wrap(~ continent) +
+  geom_line(aes(x= year, y = gdpPercap, color = continent, group = country))
+```
+
+Plot2 Part2
+```{r}
+Plot2 +
+  geom_line(data = WMGDP, aes(x = year, y = WM)) +
+  geom_point(data = WMGDP, mapping = aes(x = year, y = WM, size = population1)) +
+  theme_bw() +
+  ylim(0, 50000)
+```
+
