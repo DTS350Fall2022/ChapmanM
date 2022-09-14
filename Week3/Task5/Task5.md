@@ -7,7 +7,8 @@ output:
     keep_md: TRUE
 code_folding: 'hide'
 ---
-Libraries
+
+#### Libraries
 
 ```r
 library(tidyverse)
@@ -29,6 +30,7 @@ library(downloader)
 library(readxl)
 ```
 
+#### Data Import
 BillboardData
 
 ```r
@@ -47,7 +49,6 @@ BillboardData <- read_csv("billboard-hits.csv")
 ## ℹ Use `spec()` to retrieve the full column specification for this data.
 ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 ```
-
 SoloData
 
 ```r
@@ -64,11 +65,11 @@ SoloData <- read_csv("solo-artist-followers.csv")
 ## ℹ Use `spec()` to retrieve the full column specification for this data.
 ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 ```
-
-#Comment on Data Types:
+###### Comment on Data Types:
 Yes, Data imported correctly. I had to use the github raw URL to make it work. When I look at each data set, it is a tibble.
 
 
+### Solo Career Data
 Remove singers who who do not have at least 6 times they had a top 100 hit.
 
 ```r
@@ -78,7 +79,6 @@ BillboardData1 <-
   filter(count > 5) %>%
   select(name:peak_rank)
 ```
-
 ALL names mentioned 6+ times & ALL bands mentioned 6+ times
 
 ```r
@@ -106,95 +106,54 @@ BillboardData2
 ## 10 Justin Timberlake *NSYNC Not A Bad Thing             2014-05-02       8    22
 ## # … with 152 more rows, and abbreviated variable name ¹​peak_rank
 ```
-
-ALL bands mentioned 6+ times
-
-```r
-BillboardData3 <- 
-  group_by(BillboardData, band) %>% 
-  mutate(count = n()) %>%
-  filter(count > 5, !is.na(band))
-BillboardData3
-```
-
-```
-## # A tibble: 179 × 6
-## # Groups:   band [10]
-##    name              band   title                       peak_date  peak_…¹ count
-##    <chr>             <chr>  <chr>                       <date>       <dbl> <int>
-##  1 JC Chasez         *NSYNC Blowin' Me Up               2003-02-28      35    24
-##  2 JC Chasez         *NSYNC Some Girls                  2004-02-13      88    24
-##  3 Justin Timberlake *NSYNC SexyBack                    2006-09-08       1    24
-##  4 Justin Timberlake *NSYNC My Love                     2006-11-10       1    24
-##  5 Justin Timberlake *NSYNC What Goes Around...Comes A… 2007-03-02       1    24
-##  6 Justin Timberlake *NSYNC Can't Stop The Feeling!     2016-05-27       1    24
-##  7 Justin Timberlake *NSYNC Mirrors                     2013-06-14       2    24
-##  8 Justin Timberlake *NSYNC Cry Me A River              2003-01-31       3    24
-##  9 Justin Timberlake *NSYNC Suit & Tie                  2013-04-05       3    24
-## 10 Justin Timberlake *NSYNC Rock Your Body              2003-05-09       5    24
-## # … with 169 more rows, and abbreviated variable name ¹​peak_rank
-```
-
-ALL bands mentioned 6+ times & Excluding names mentioned 6+ times
-
-```r
-BillboardData4 <- 
-  group_by(BillboardData3, name) %>% 
-  mutate(count = n()) %>%
-  filter(count <= 5, !is.na(name))
-BillboardData4
-```
-
-```
-## # A tibble: 17 × 6
-## # Groups:   name [7]
-##    name            band           title                 peak_date  peak_…¹ count
-##    <chr>           <chr>          <chr>                 <date>       <dbl> <int>
-##  1 JC Chasez       *NSYNC         Blowin' Me Up         2003-02-28      35     2
-##  2 JC Chasez       *NSYNC         Some Girls            2004-02-13      88     2
-##  3 Normani         Fifth Harmony  Motivation            2019-08-30      33     1
-##  4 Joe Jonas       Jonas Brothers Gotta Find You        2008-07-04      30     2
-##  5 Joe Jonas       Jonas Brothers See No More           2011-07-01      92     2
-##  6 Ralph Tresvant  New Edition    Sensitivity           1991-01-25       4     3
-##  7 Ralph Tresvant  New Edition    Stone Cold Gentleman  1991-04-12      34     3
-##  8 Ralph Tresvant  New Edition    Money Can't Buy You … 1992-08-14      54     3
-##  9 Liam Payne      One Direction  Strip That Down       2017-09-15      10     3
-## 10 Liam Payne      One Direction  For You               2018-02-23      76     3
-## 11 Liam Payne      One Direction  Bedroom Floor         2017-11-10      98     3
-## 12 Louis Tomlinson One Direction  Back To You           2017-08-11      40     1
-## 13 Niall Horan     One Direction  Slow Hands            2017-09-29      11     5
-## 14 Niall Horan     One Direction  This Town             2017-01-13      20     5
-## 15 Niall Horan     One Direction  Nice To Meet Ya       2019-11-22      63     5
-## 16 Niall Horan     One Direction  Too Much To Ask       2017-10-06      66     5
-## 17 Niall Horan     One Direction  No Judgement          2020-02-21      97     5
-## # … with abbreviated variable name ¹​peak_rank
-```
-
-
 Find the corresponding data in the data set for the top singers’ bands.
 
 ```r
-BillboardData2 <- 
+BillboardData3 <- 
   group_by(BillboardData1, band) %>% 
   mutate(count = n()) %>%
   filter(count > 5, !is.na(band))
 ```
 
+
+### Band Data
+Create list of bands that have/had a solo act mentioned 6+ times
+
+```r
+x <- BillboardData2$band
+```
+Filter out bands (names) that are null (This filters out solo acts)
+
+```r
+BB1 <- filter(BillboardData, is.na(band))
+```
+Filter out names (bands) that are not in x (bands with a solo act with 6+ mentions)
+
+```r
+BB2 <- filter(BB1, name %in% x)
+```
+Change band to name so that it matches visualization
+
+```r
+BB3 <- mutate(BB2,band = name)
+```
+
+
+### Plot
 Plot1 Part1
 
 ```r
 Plot1 <- ggplot(data = BillboardData2) +
   geom_point(mapping = aes(x = peak_date, y = peak_rank, color = name)) +
   geom_line(aes(x= peak_date, y = peak_rank, color = name)) + 
-  facet_wrap(~ band, nrow = 4, scales = "free")
+  facet_wrap(~ band, nrow = 3, scales = "free")
 ```
-
 Plot1 Part2
 
 ```r
 Plot1 +
-  geom_point(data = BillboardData4, mapping = aes(x = peak_date, y = peak_rank)) +
-  geom_line(data = BillboardData4, aes(x= peak_date, y = peak_rank))  
+  geom_point(data = BB3, mapping = aes(x = peak_date, y = peak_rank)) +
+  geom_line(data = BB3, aes(x= peak_date, y = peak_rank), linetype = "dashed") 
 ```
 
 ```
@@ -202,8 +161,9 @@ Plot1 +
 ## the group aesthetic?
 ```
 
-![](Task5_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
+![](Task5_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
 
+#### OTHER DATA
 TITANIC
 
 ```r
@@ -221,7 +181,6 @@ TitanicData <- read_csv("titanic_data.csv")
 ## ℹ Use `spec()` to retrieve the full column specification for this data.
 ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 ```
-
 CENSUS
 
 ```r
@@ -239,7 +198,6 @@ CensusData <- read_csv("census.csv")
 ## ℹ Use `spec()` to retrieve the full column specification for this data.
 ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 ```
-
 MOVIE
 
 ```r
@@ -258,7 +216,6 @@ MovieData <- read_csv("movie_dataset.csv")
 ## ℹ Use `spec()` to retrieve the full column specification for this data.
 ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 ```
-
 HOUSING PRICES
 
 ```r
@@ -277,7 +234,6 @@ HomeData <- read_csv("home_data.csv")
 ## ℹ Use `spec()` to retrieve the full column specification for this data.
 ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 ```
-
 CREDIT CARD FRUAD DATA
 
 ```r

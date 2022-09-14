@@ -7,29 +7,30 @@ output:
     keep_md: TRUE
 code_folding: 'hide'
 ---
-Libraries
+
+#### Libraries
 ```{r}
 library(tidyverse)
 library(downloader)
 library(readxl)
 ```
 
+#### Data Import
 BillboardData
 ```{r}
 download.file("https://raw.githubusercontent.com/DTS350Fall2022/ChapmanM/main/Week3/Task5/billboard-hits.csv","billboard-hits.csv")
 BillboardData <- read_csv("billboard-hits.csv")
 ```
-
 SoloData
 ```{r}
 download.file("https://raw.githubusercontent.com/DTS350Fall2022/ChapmanM/main/Week3/Task5/solo-artist-followers.csv","solo-artist-followers.csv")
 SoloData <- read_csv("solo-artist-followers.csv")
 ```
-
-#Comment on Data Types:
+###### Comment on Data Types:
 Yes, Data imported correctly. I had to use the github raw URL to make it work. When I look at each data set, it is a tibble.
 
 
+### Solo Career Data
 Remove singers who who do not have at least 6 times they had a top 100 hit.
 ```{r}
 BillboardData1 <- 
@@ -38,7 +39,6 @@ BillboardData1 <-
   filter(count > 5) %>%
   select(name:peak_rank)
 ```
-
 ALL names mentioned 6+ times & ALL bands mentioned 6+ times
 ```{r}
 BillboardData2 <- 
@@ -47,73 +47,70 @@ BillboardData2 <-
   filter(count > 5, !is.na(band))
 BillboardData2
 ```
-
-ALL bands mentioned 6+ times
-```{r}
-BillboardData3 <- 
-  group_by(BillboardData, band) %>% 
-  mutate(count = n()) %>%
-  filter(count > 5, !is.na(band))
-BillboardData3
-```
-
-ALL bands mentioned 6+ times & Excluding names mentioned 6+ times
-```{r}
-BillboardData4 <- 
-  group_by(BillboardData3, name) %>% 
-  mutate(count = n()) %>%
-  filter(count <= 5, !is.na(name))
-BillboardData4
-```
-
-
 Find the corresponding data in the data set for the top singers’ bands.
 ```{r}
-BillboardData2 <- 
+BillboardData3 <- 
   group_by(BillboardData1, band) %>% 
   mutate(count = n()) %>%
   filter(count > 5, !is.na(band))
 ```
 
+
+### Band Data
+Create list of bands that have/had a solo act mentioned 6+ times
+```{r}
+x <- BillboardData2$band
+```
+Filter out bands (names) that are null (This filters out solo acts)
+```{r}
+BB1 <- filter(BillboardData, is.na(band))
+```
+Filter out names (bands) that are not in x (bands with a solo act with 6+ mentions)
+```{r}
+BB2 <- filter(BB1, name %in% x)
+```
+Change band to name so that it matches visualization
+```{r}
+BB3 <- mutate(BB2,band = name)
+```
+
+
+### Plot
 Plot1 Part1
 ```{r}
 Plot1 <- ggplot(data = BillboardData2) +
   geom_point(mapping = aes(x = peak_date, y = peak_rank, color = name)) +
   geom_line(aes(x= peak_date, y = peak_rank, color = name)) + 
-  facet_wrap(~ band, nrow = 4, scales = "free")
+  facet_wrap(~ band, nrow = 3, scales = "free")
 ```
-
 Plot1 Part2
 ```{r}
 Plot1 +
-  geom_point(data = BillboardData4, mapping = aes(x = peak_date, y = peak_rank)) +
-  geom_line(data = BillboardData4, aes(x= peak_date, y = peak_rank))  
+  geom_point(data = BB3, mapping = aes(x = peak_date, y = peak_rank)) +
+  geom_line(data = BB3, aes(x= peak_date, y = peak_rank), linetype = "dashed") 
 ```
 
+#### OTHER DATA
 TITANIC
 ```{r}
 download.file("https://raw.githubusercontent.com/rashida048/Datasets/master/titanic_data.csv","titanic_data.csv")
 TitanicData <- read_csv("titanic_data.csv")
 ```
-
 CENSUS
 ```{r}
 download.file("https://raw.githubusercontent.com/rashida048/Datasets/master/census.csv","census.csv")
 CensusData <- read_csv("census.csv")
 ```
-
 MOVIE
 ```{r}
 download.file("https://raw.githubusercontent.com/rashida048/Datasets/master/movie_dataset.csv","movie_dataset.csv")
 MovieData <- read_csv("movie_dataset.csv")
 ```
-
 HOUSING PRICES
 ```{r}
 download.file("https://raw.githubusercontent.com/rashida048/Datasets/master/home_data.csv","home_data.csv")
 HomeData <- read_csv("home_data.csv")
 ```
-
 CREDIT CARD FRUAD DATA
 ```{r}
 download.file("https://raw.githubusercontent.com/rashida048/Datasets/master/fraud_data.csv","fraud_data.csv")
