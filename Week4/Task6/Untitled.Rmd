@@ -1,0 +1,45 @@
+---
+title: "T6"
+author: "matthewchapman"
+date: "2022-09-15"
+output: 
+  html_document:
+    keep_md: TRUE
+---
+
+
+
+```{r}
+max_flower <- iris %>%
+  group_by(Species) %>%
+  summarise(Petal.Length, Petal.Width, max = max(Petal.Length, na.rm=TRUE)) %>%
+  filter(max == Petal.Length, Petal.Width != 0.2)
+max_flower
+```
+
+```{r}
+max_flower_width <- iris %>%
+  group_by(Species) %>%
+  summarise(Petal.Length, Petal.Width, max = max(Petal.Width, na.rm=TRUE)) %>%
+  filter(max == Petal.Width) %>%
+  filter(Petal.Length != 6, Petal.Length != 5.7)
+```
+
+
+```{r}
+ggplot(data = iris, mapping = aes(x = Petal.Width, 
+                                  y = Petal.Length)) +
+  geom_point(aes(color = Species, shape = Species)) +
+  geom_point(size = 3, shape = 1, color = "black", data = max_flower) +
+  ggrepel::geom_label_repel(aes(color = Species, label = "Largest Petal Length"), data = max_flower1) +
+  geom_point(size = 3, shape = 1, color = "black", data = max_flower_width2) +
+  ggrepel::geom_label_repel(aes(color = Species, label = "Largest Petal Width"), data = max_flower_width2) +
+  labs(x = "Sepal Width (cm)",
+       y = "Sepal Length (cm)",
+       title = "We can predict Setosa's sepal length from its width",
+       subtitle = "Versicolor and Virginica are not predictable",
+       caption = "Source: iris")
+```
+
+
+
