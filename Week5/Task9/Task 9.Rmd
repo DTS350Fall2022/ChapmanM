@@ -1,0 +1,97 @@
+---
+title: "Task9"
+author: "matthewchapman"
+date: "2022-09-27"
+output: 
+  html_document:
+    keep_md: TRUE
+---
+#### Load Libraries
+```{r}
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+library(forcats)
+library(gapminder)
+```
+
+## ToothGrowth
+#### Plot 1
+```{r}
+T1 <- ToothGrowth %>%
+  group_by(supp, dose) %>%
+  summarise(len = mean(len))
+T1
+
+avg <- T1 %>%
+  group_by(dose) %>%
+  summarise(len = mean(len))
+avg
+
+P1 <- ggplot(data= T1) +
+  geom_area(aes(x = dose, y = len, fill = supp)) +
+  geom_line(data = avg, mapping = aes(x = dose, y = len)) +
+  geom_point(data = avg, mapping = aes(x = dose, y = len)) +
+  geom_text(label = "Average length by dose", x=1.25, y=27, angle = 10) +
+  labs(x = "Dose (mg/day)",
+       y = "Average Tooth Length",
+       subtitle = "Average Tooth Length by Dose and by Supplement",
+       fill = "Supplements") 
+P1
+```
+
+Plot 1 demonstrates the relationship between Dosage and Average Tooth Length. It is clear that as dosage increases, so does Average Tooth Length. It also shows that the supplement "OJ" has larger average length. This is why I used an area graph, it shows the dosage and average length relationship as well as their relationships with supplements.
+
+#### Plot 2
+```{r}
+P2 <- ggplot(data = ToothGrowth, mapping = aes(x=dose,y=len,group = dose,color = dose)) +
+  geom_boxplot() +
+  geom_jitter() +
+  geom_col(data = avg, mapping = aes(x= dose, y = len), alpha = 0.3) +
+  labs(x = "Dose", y = "Tooth Length", color="Dose")
+P2
+```
+
+Plot 2 is a box plot with the length of each "tooth" at each dose. The data points are also present to see how the box plot was created. There is also a translucent column in each dose category that shows the average tooth length for each dose. This plot also shows that as dose increases so does tooth length.
+
+## gapminder
+#### Plot3
+```{r}
+gm <- gapminder %>%
+  arrange(year) %>%
+  filter(country == "United States" | country == "Mexico"| country == "China" | country == "India" | country == "Brazil") %>%
+  group_by(year,country) %>%
+  mutate(pop1 = mean(pop))
+gm
+
+P3 <- ggplot(data = gm, mapping = aes(x= year, y = pop,color = country)) +
+  geom_point() +
+  geom_line() +
+  geom_rect(aes(xmin=1946,
+                xmax = 1964,
+                ymin = -Inf,
+                ymax = Inf),color = "black", alpha = 0.01) +
+  geom_text(aes(y = 1000000000, x = 1955, label = "Baby Boomer Era"), color = "black", size = 2.5) +
+  geom_text(aes(y = 940000000, x = 1955, label = "(1946-1964)"), color = "black", size = 2.5) +
+  labs(x = "Year", y = "Population", color = "Country")
+P3
+```
+
+Plot 3 shows the countries Brazil, China, India, Mexico, and the US and their populations by year. The baby boomer era is also highlighted. It appears that after the era, there was a steady population increase in all countries, especially China and India. I chose this plot to see how population increases over time.
+
+#### Plot 4
+```{r}
+gm1 <- gapminder %>%
+  group_by(continent) %>%
+  summarise(lifeExp = mean(lifeExp)) %>%
+  arrange(lifeExp)
+print(gm1,n=100)
+
+P4 <- ggplot(data = gm1, mapping = aes(x = fct_reorder(continent,lifeExp),y=lifeExp)) +
+  geom_col(aes(color = continent, fill = continent)) +
+  geom_text(aes(label = round(lifeExp, digits = 2)),nudge_y = 5) +
+  labs(x = "Continent", y = "Life Expectancy (Years)", title = "Average Life Expectancy By Continent",fill="Continent",color="Continent")
+P4
+```
+
+Plot 4 is a column graph showing the average life expectancy over the entire span of the data by continent. I chose it because it allows a side by side comparison with each continents aaverage Life Expectancy. The labels also make reading it much more clear.
