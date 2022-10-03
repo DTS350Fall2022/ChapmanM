@@ -1,0 +1,86 @@
+---
+title: "Task11"
+author: "matthewchapman"
+date: "2022-10-03"
+output: 
+  html_document:
+    keep_md: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
+```
+
+#### Libararies
+```{r}
+library(downloader)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(RColorBrewer)
+library(tidyr)
+```
+
+#### Download Data
+```{r}
+data <- read_csv("https://raw.githubusercontent.com/fivethirtyeight/data/master/fandango/fandango_score_comparison.csv")
+data
+```
+
+#### Tidy Data
+```{r}
+d1 <- data %>%
+  select(FILM, RT_norm, RT_user_norm, Metacritic_norm, Metacritic_user_nom, IMDB_norm) %>%
+  pivot_longer(c('RT_norm', 'RT_user_norm','Metacritic_norm','Metacritic_user_nom','IMDB_norm'),names_to = "Website",values_to = "Score") %>%
+  group_by(Website) %>%
+  summarise(Score = mean(Score)) %>%
+  mutate(Website = fct_reorder(Website, Score)) %>%
+  mutate(Type = case_when(
+    Website == 'RT_norm' | Website == 'Metacritic_norm' ~ "Critic",
+    Website == 'RT_user_norm' | Website == 'Metacritic_user_nom' | Website == 'IMDB_norm' ~ "User"
+  ))
+d1
+```
+
+
+#### Critic vs User Data
+```{r}
+critic <- d1 %>%
+  filter(Website == "RT_norm" | Website == "Metacritic_norm") %>%
+  summarise(Type,Score = mean(Score)) %>%
+  group_by(Type,Score) %>%
+  summarise()
+critic
+
+user <- d1 %>%
+  filter(Website == "RT_user_norm" | Website == "Metacritic_user_nom" | Website == "IMDB_norm") %>%
+  summarise(Type,Score = mean(Score)) %>%
+  group_by(Type,Score) %>%
+  summarise()
+user
+```
+
+#### Plot 1
+```{r}
+plot1 <- ggplot(data = d1,mapping = aes(x = Type, y = Score, fill = Website)) +
+  geom_col(position = "dodge") +
+  geom_text(aes(x = 'Critic', y = 2.8, label = "Critic Average (2.99)",group = "Critic")) +
+  geom_text(aes(x = 'User', y = 3.1, label = "User Average (3.27)")) +
+  scale_fill_discrete(labels=c('Metacritic Critic', 'RT Critic', 'RT User','Metacritic User','IMDB User')) +
+  geom_hline(aes(yintercept = Score), critic,linetype = "dashed") +
+  geom_hline(aes(yintercept = Score), user)
+plot1
+```
+
+#### First 20 rows of tidy data
+```{r}
+d2 <- data %>%
+  select(FILM, RT_norm, RT_user_norm, Metacritic_norm, Metacritic_user_nom, IMDB_norm) %>%
+  pivot_longer(c('RT_norm', 'RT_user_norm','Metacritic_norm','Metacritic_user_nom','IMDB_norm'),names_to = "Website",values_to = "Score")
+
+d2 <- head(d2,n=20)
+d2
+```
+
+
+The graph shows the average rating for the websites on a 5 star scale. Metacritic and Rotten Tomatoes both have a critic and user score, while IMDB only has user scores. I grouped them together by type and it turns out that users give a higher score than critics. The lowest average user score (RT User) is still higher than the highest critic score.
