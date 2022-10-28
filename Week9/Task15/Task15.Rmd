@@ -1,0 +1,79 @@
+---
+title: "Task15"
+author: "matthewchapman"
+date: "2022-10-28"
+output: 
+  html_document:
+    keep_md: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,message = FALSE, warning = FALSE)
+```
+
+### Libraries
+```{r}
+library(tidyverse)
+library(downloader)
+library(dplyr)
+library(tidyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(lubridate)
+library(riem)
+```
+
+### Read in Car Wash Data
+```{r}
+cw <- read_csv("https://github.com/WJC-Data-Science/DTS350/raw/master/carwash.csv")
+head(cw)
+```
+
+
+### Format Data for Needs of the Task
+```{r}
+cw2 <- with_tz(cw, tzone = "US/Mountain") %>%
+  mutate(hour = (ceiling_date(time, "hour"))) %>%
+  group_by(hour) %>%
+  summarise(total_sales = sum(amount))
+head(cw2)
+```
+
+
+### Create dataset with matching temperatures and time
+```{r}
+weather <- riem_measures(station = "RXE",  date_start  = '2016-05-13',  date_end  = '2016-07-08' ) %>%
+  with_tz(tzone = 'US/Mountain') %>%
+  drop_na(tmpf) %>%
+  mutate(hour = (ceiling_date(valid, "hour"))) %>%
+  select(hour,tmpf)
+head(weather)
+```
+
+
+### Merge
+```{r}
+merge1 <- merge(weather, cw2, by = 'hour') %>%
+  mutate(hour_number = hour(hour)) %>%
+  group_by(hour_number) %>%
+  summarise(sales = mean(total_sales), temp = round(mean(tmpf),digits = 1)) %>%
+  arrange(hour_number) %>%
+  mutate(profit = case_when(
+    sales < 0 ~ "negative",
+    sales > 0 ~ "positive"
+  ))
+head(merge1)
+```
+
+
+###Plot
+```{r}
+p2 <- ggplot(merge1, mapping = aes(x = hour_number, y = sales)) +
+  geom_col(alpha=2/5) +
+  geom_text(label = merge1$temp) +
+  theme_bw() +
+  labs(x = "Hour of Day (Military Time)", y = "Sales ($)", title = "Sales by Hour of Day and Average Temperature (F)")
+p2
+```
+
