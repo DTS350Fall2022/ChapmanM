@@ -1,0 +1,83 @@
+---
+title: "Task17"
+author: "matthewchapman"
+date: "2022-11-03"
+output: 
+  html_document:
+    keep_md: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,message = FALSE,warning = FALSE)
+```
+
+#### Libraries
+```{r}
+library(tidyquant) # for data sets and special functions
+library(tidyverse) # for pipes, graphs, etc
+library(lubridate) # for adding dates
+```
+
+### My Stocks:
+TMobile, Tesla, Vanguard Information Technology
+```{r}
+(TMobile <- tq_get("TMUS", get = "stock.prices", from = "2021-10-01"))
+(Tesla <- tq_get("TSLA", get = "stock.prices", from = "2021-10-01"))
+(VITIF <- tq_get("VGT", get = "stock.prices", from = "2021-10-01"))
+```
+
+### My Friend's Stocks:
+Amazon, Google, Dell
+```{r}
+(Amazon <- tq_get("AMZN", get = "stock.prices", from = "2021-10-01"))
+(Google <- tq_get("GOOG", get = "stock.prices", from = "2021-10-01"))
+(Dell <- tq_get("DELL", get = "stock.prices", from = "2021-10-01"))
+
+```
+
+
+### Merge Data For Analysis
+```{r}
+merge1 <- tq_get(c("TMUS",'TSLA','VGT',"AMZN",'GOOG','DELL'), get = "stock.prices", from = "2021-10-01") %>%
+  mutate(who = case_when(
+    symbol == 'TMUS' | symbol == 'TSLA' | symbol == 'VGT' ~ "My Stock",
+    symbol == 'AMZN' | symbol == 'GOOG' | symbol == 'DELL' ~ "Friend's Stock"
+  )) %>%
+  group_by(symbol) %>%
+  mutate(starting = open[1]) %>%
+  select(symbol,date,open,close,starting,who) %>%
+  mutate(pchange = close/starting,money = pchange*1000)
+head(merge1)
+```
+This Dataset gives the percentage change and total value for each stock for each day.
+
+### Merge Data For Analysis 2
+```{r}
+merge2 <- merge1 %>%
+  group_by(who,date) %>%
+  summarise(money = mean(money))
+head(merge2)
+```
+This Data set shows the average portfolio value for each day for each group of stocks (My stock vs Friend Stock)
+
+
+## Who is winning each day of the competetion?
+```{r}
+ggplot() +
+  geom_line(merge2,mapping = aes(x=date,y=money,color=who)) +
+  geom_hline(yintercept = 1000) +
+  labs(x = "Date", y = "Portfolio Average ($)",title = "Average Value of Stock Portfolios",color = "Portfolio: ")
+```
+
+The visualization shows the average value of me and my friends portfolio. As you can see, me and my friend both lost money in the long run. Neither of us broke even at $1000 average stock value. To answer the question, my friend was winning at the very begginning until between October 2021 - November 2021. I have been winning the competition ever since.
+
+## Which stock is helping win the competition?
+```{r}
+ggplot() +
+  geom_line(merge1,mapping = aes(x=date,y=money,color=symbol)) +
+  geom_hline(yintercept = 1000) +
+  facet_wrap(~who) +
+  labs(x = "Date",y="Stock Value ($)",title = "My Stock vs Friend Stock in Past 12 Months",color = 'Symbol')
+```
+
+This visualization looks at the difference between the individual performances of me and my friends stocks. Tesla is responsible for my lead the majoirty of the time. However, Tesla takes a large plunge and it is actually TMobile that saves me at the end. TMobile is the only one out of the 6 stocks to have a positive ROI. All 3 of my friends stocks had similar patterns. They started of promising at the begginning of the competition, but somewhere between Jan 2022 - April 2022 all of their stocks declined. I hold Tesla responsible for my winning for the majority of the competion and TMobile at the end of the competition.
