@@ -1,0 +1,143 @@
+---
+title: "CS9"
+author: "matthewchapman"
+date: "2022-11-03"
+output: 
+  html_document:
+    keep_md: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,warning = FALSE,message = FALSE)
+```
+
+#### Libraries
+```{r}
+library(dplyr)
+library(timetk)
+library(ggplot2)
+library(tidyquant)
+library(tidyverse)
+library(dygraphs)
+library(lubridate)
+```
+
+# SECTION 1
+### Tickers Today
+```{r}
+tickers_today <- tq_get(c("CXW", "F", "GM", "JCP", "KR", "WDC", "NKE","T", "WDAY", "WFC", "WMT"),get = "stock.prices", from = today()-years(5))
+head(tickers_today)
+```
+
+### Build Interactive Visualizations
+#### Win/Loss Each Day
+```{r}
+tickers <- tickers_today %>%
+  group_by(symbol) %>%
+  mutate(starting = open[1]) %>%
+  select(symbol,date,open,close,volume,starting) %>%
+  mutate(value = starting - close) %>%
+  select(symbol,date,value) %>%
+  pivot_wider(names_from = symbol, values_from = value) %>%
+  tk_xts(date_var = date)
+head(tickers)
+```
+#### Value Each Day
+```{r}
+My_stockPrices <- tickers_today %>%
+  select(symbol, date, adjusted) %>%
+  pivot_wider(names_from = symbol, values_from = adjusted) %>%
+  tk_xts(date_var = date)
+head(My_stockPrices)
+```
+#### Graphs
+```{r}
+dygraph(tickers,main = "Stock Performance (Win/Loss ($))")
+
+
+dygraph(My_stockPrices, main = "Stock Performance (Percentage)") %>%
+  dyRebase(percent = TRUE) 
+```
+
+
+### Volume
+#### Dataset with Volume
+```{r}
+My_volume <- tickers_today %>%
+  select(symbol,date,volume)
+head(My_volume)
+```
+#### Graphs
+```{r}
+ggplot(My_volume,mapping = aes(x = symbol,y=volume,fill=symbol)) +
+  geom_boxplot()
+
+ggplot(My_volume,mapping = aes(x = date,y=volume,fill=symbol)) +
+  geom_col() +
+  facet_wrap(~symbol)
+```
+
+
+
+
+
+# SECTION 2
+### Enter number list of stocks
+```{r}
+#x <- c()
+```
+### Tickers Today
+```{r}
+#tickers_today1 <- tq_get(x,get = "stock.prices", from = today()-years(5))
+#head(tickers_today1)
+```
+
+### Build Interactive Visualizations
+#### Win/Loss Each Day
+```{r}
+#tickers1 <- tickers_today1 %>%
+ # group_by(symbol) %>%
+  #mutate(starting = open[1]) %>%
+  #select(symbol,date,open,close,volume,starting) %>%
+  #mutate(value = starting - close) %>%
+  #select(symbol,date,value) %>%
+  #pivot_wider(names_from = symbol, values_from = value) %>%
+  #tk_xts(date_var = date)
+#tickers1
+```
+#### Value Each Day
+```{r}
+#My_stockPrices1 <- tickers_today1 %>%
+ # select(symbol, date, adjusted) %>%
+  #pivot_wider(names_from = symbol, values_from = adjusted) %>%
+  #tk_xts(date_var = date)
+#My_stockPrices1
+```
+#### Graphs
+```{r}
+#dygraph(tickers1,main = "Stock Performance (Win/Loss ($)")
+
+
+#dygraph(My_stockPrices1, main = "Stock Performance (Percentage)") %>%
+ # dyRebase(percent = TRUE) 
+```
+
+
+### Volume
+#### Dataset with Volume
+```{r}
+#My_volume1 <- tickers_today1 %>%
+ # select(symbol,date,volume)
+#My_volume1
+```
+#### Graphs
+```{r}
+#ggplot(My_volume1,mapping = aes(x = symbol,y=volume,fill=symbol)) +
+ # geom_boxplot()
+
+#ggplot(My_volume1,mapping = aes(x = date,y=volume,fill=symbol)) +
+#  geom_col() +
+#  facet_wrap(~symbol)
+```
+
+After looking at the performance in percentage interactive graph for one stock, I've determined that KR is the best choice, it has been performing well for the entire 5 year period and survived the pandemic. WDAY and WMT are also performing well at 2nd and 3rd place. CXW is performing the worst. I decided to make a win loss graphic as well because not all stock prices are equal. A 5% drop in a 1000 dollar stock is far worse than a 5% drop in a 100 dollar stock. For volume, I used a box plot and faceted bar chart to show the disribution of volume with each stock.
