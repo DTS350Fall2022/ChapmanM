@@ -1,0 +1,67 @@
+---
+title: "Task 18"
+author: "matthewchapman"
+date: "2022-11-14"
+output: 
+  html_document:
+    keep_md: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,message = FALSE,warning = FALSE)
+```
+
+
+#### Libraries
+```{r}
+library(remotes)
+library(devtools)
+library(sf)
+library(ggsflabel)
+library(maps)
+library(USAboundaries)
+library(USAboundariesData)
+library(tidyverse)
+library(ggplot2)
+```
+
+### Data for Map
+```{r}
+cities <- us_cities() 
+states <- us_states()
+county <- us_counties()
+idaho <- us_counties(states = "ID")
+map1 <- sf::st_as_sf(maps::map("state", plot = FALSE, fill = TRUE))
+head(map1)
+
+cities1 <- cities %>%
+  filter(state_name != 'Alaska', state_name != 'Hawaii') %>%
+  group_by(state_name) %>%
+  arrange(desc(population)) %>%
+  slice(1:3)
+cities1
+```
+
+### City Data
+```{r}
+big <- cities1 %>%
+  slice(1:1)
+med <- cities1 %>%
+  slice(2:2)
+sml <- cities1 %>%
+  slice(3:3)
+```
+
+### Plot
+```{r}
+ggplot() +
+  geom_sf(data = map1, fill = NA) +
+  geom_sf(data = idaho, fill = NA) +
+  geom_sf(data = sml, aes(size = population/1000), color = "#B7E9F7") +
+  geom_sf(data = med, aes(size = population/1000), color = "#0C71E0") +
+  geom_sf(data = big, aes(size = population/1000), color = "#000080") +
+  geom_sf_label(data = big, aes(label = city), color = '#000080', size = 2)+
+  theme_bw() +
+  labs(x="",y="")
+```
+
