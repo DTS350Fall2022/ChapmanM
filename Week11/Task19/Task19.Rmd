@@ -1,0 +1,68 @@
+---
+title: "Task19"
+author: "matthewchapman"
+date: "2022-11-15"
+output: 
+  html_document:
+    keep_md: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,message = FALSE,warning = FALSE)
+```
+
+
+#### Libraries
+```{r}
+library(remotes)
+library(devtools)
+library(sf)
+library(ggsflabel)
+library(maps)
+library(USAboundaries)
+library(USAboundariesData)
+library(tidyverse)
+library(ggplot2)
+library(leaflet)
+```
+
+### Data for Map
+```{r}
+cities <- us_cities() 
+states <- us_states()
+county <- us_counties()
+idaho <- us_counties(states = "ID")
+map1 <- sf::st_as_sf(maps::map("state", plot = FALSE, fill = TRUE))
+head(map1)
+
+cities1 <- cities %>%
+  filter(state_name != 'Alaska', state_name != 'Hawaii') %>%
+  group_by(state_name) %>%
+  arrange(desc(population)) %>%
+  slice(1:3)
+cities1
+```
+
+### City Data
+```{r}
+big <- cities1 %>%
+  slice(1:1)
+med <- cities1 %>%
+  slice(2:2)
+sml <- cities1 %>%
+  slice(3:3)
+```
+
+### Plot
+```{r}
+leaflet(data = map1) %>%
+  addTiles() %>%
+  addPolygons(fillColor = "white",weight = .8, color = "black",opacity = 1,fillOpacity = 0.7)  %>%
+  addPolygons(data = idaho,fillColor = "white",weight = .8,opacity = 1,color = "black",fillOpacity = 0.7) %>%
+  addCircleMarkers(data = big, stroke = FALSE,radius = 5,color = "#000080",fillOpacity = 1,popup = paste("City:", big$city, "<br>",
+                                                                                                         "Population:", big$population)) %>%
+  addCircleMarkers(data = med, stroke = FALSE,radius = 3,color = "#0C71E0",fillOpacity = 1,popup = paste("City:", med$city, "<br>",
+                                                                                                         "Population:", med$population)) %>%
+  addCircleMarkers(data = med,stroke = FALSE, radius = 3,color = "#B7E9F7",fillOpacity = 1,popup = paste("City:", sml$city, "<br>",
+                "Population:", sml$population))
+```
