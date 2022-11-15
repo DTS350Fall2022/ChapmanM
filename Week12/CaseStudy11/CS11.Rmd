@@ -1,0 +1,93 @@
+---
+title: "CS11"
+author: "matthewchapman"
+date: "2022-11-15"
+output: 
+  html_document:
+    keep_md: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,message = FALSE,warning = FALSE)
+```
+
+#### Libraries
+```{r}
+library(remotes)
+library(devtools)
+library(sf)
+library(ggsflabel)
+library(maps)
+library(USAboundaries)
+library(USAboundariesData)
+library(tidyverse)
+library(ggplot2)
+library(readr)
+library(leaflet)
+```
+
+#### Permits Data
+```{r}
+permits <- read_csv("https://github.com/WJC-Data-Science/DTS350/raw/master/permits.csv") %>%
+  filter(StateAbbr == 'PA',year==2010) %>%
+  select(county,countyname,value) %>%
+  group_by(county,countyname) %>%
+  summarise(total = sum(value)) %>%
+  ungroup() %>%
+  arrange(county,countyname) %>%
+  mutate(rank = rank(county),county = rank) %>%
+  select(county,countyname,total)
+head(permits)
+```
+
+#### Pennsylvania County Data
+```{r}
+pa <- read_csv("county.csv") %>%
+  rename('county' = 'County Code Number','countyname1' = 'County Name') %>%
+  select(county,countyname1,Longitude,Latitude) %>%
+  filter(countyname1 != 'Pennsylvania',countyname1 != 'Cameron') %>%
+  arrange(county,countyname1) %>%
+  mutate(rank = rank(county),county = rank) %>%
+  select(county,countyname1,Longitude,Latitude)
+head(pa)
+```
+
+#### Merge Data Sets and Rank
+```{r}
+merge1 <- merge(permits,pa,by = 'county') %>%
+  select(countyname,total,Latitude,Longitude) %>%
+  arrange(total) %>%
+  mutate(rank = ntile(total,4))
+head(merge1)
+```
+
+#### Best County
+```{r}
+best <- merge1 %>%
+  filter(total == max(total))
+```
+
+#### Map Aesthetics
+```{r}
+map1 <- sf::st_as_sf(maps::map("state", plot = FALSE, fill = TRUE)) %>%
+  filter(ID == 'pennsylvania')
+
+pal <- colorFactor(c("red", "orange","yellow","green"), domain = c(1,2,3,4))
+
+marker_icon <- makeIcon(
+  iconUrl = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.8.0-beta.0/images/marker-icon.png",
+  shadowUrl = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.8.0-beta.0/images/marker-shadow.png",
+)
+```
+
+#### Map
+```{r}
+leaflet(data = map1) %>% addTiles() %>%
+  addPolygons(fillColor = topo.colors(10, alpha = NULL), stroke = TRUE) %>%
+  addCircleMarkers(data = merge1, popup = paste("County:", merge1$countyname, "<br>",
+                                                        "Total:", merge1$total),color = ~pal(rank),fillOpacity = 1) %>%
+  addMarkers(data = best, icon = marker_icon, popup = paste("County:", best$countyname, "<br>",
+                                                            "Total:", best$total))
+```
+
+I created an interactive map of a highlighted Pennsylvania and its counties. The map gives information about the number of building permits in each county in 2010. I labeled the map with red being the lowest quartile, orange second-lowest , yellow second-highest, and green as highest (best). There is also an singular unique icon that represents the county with the highest number of building permits. The map shows that the southeastern part of the state was mostly in the top two quartiles, indicating that it is more preferable to live there. The most popular city, Lancaster County also is in this reigon. In the opposite direction, the northwestern part of the state all appears to be in the lower quartiles. Therefore, I recommend living in the southeastern part of the state, specifically Lancaster County.
