@@ -32,7 +32,7 @@ permits <- read_csv("https://github.com/WJC-Data-Science/DTS350/raw/master/permi
   filter(StateAbbr == 'PA',year==2010) %>%
   select(county,countyname,value) %>%
   group_by(county,countyname) %>%
-  summarise(total = sum(value)) %>%
+  summarise(total = sum(value)/2) %>%
   ungroup() %>%
   arrange(county,countyname) %>%
   mutate(rank = rank(county),county = rank) %>%
