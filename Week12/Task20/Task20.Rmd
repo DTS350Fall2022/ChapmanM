@@ -1,0 +1,74 @@
+---
+title: "Task20"
+author: "matthewchapman"
+date: "2022-10-28"
+output: 
+  html_document:
+  keep_md: TRUE
+---
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,message = FALSE,warning = FALSE)
+```
+
+### Libraries
+```{r}
+library(tidyverse) 
+library(downloader)
+library(dplyr)
+library(tidyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(lubridate)
+library(riem)
+library(remotes)
+library(devtools)
+library(tidyverse)
+library(ggplot2)
+library(readr)
+library(gapminder)
+library(gganimate)
+library(gifski)
+```
+
+
+### Import Sales Data
+```{r}
+sales <- read_csv("https://github.com/WJC-Data-Science/DTS350/raw/master/sales.csv")
+head(sales)
+tail(sales)
+```
+
+## Format Data for Analysis
+```{r}
+sales1 <- sales %>%
+  with_tz(tz = "US/Mountain") %>%
+  mutate(day = ceiling_date(Time, "day"),
+         week = ceiling_date(Time, "week"),
+         month = ceiling_date(Time, "month"),
+         hour = ceiling_date(Time, "hour")) %>%
+  filter(Name != "Missing")
+head(sales1)
+```
+
+## Which Business is the best investment?
+#### Hours of Operation
+```{r}
+ho2 <- sales1 %>%
+  select(Name, Amount, hour) %>%
+  mutate(hour = hour(hour)) %>%
+  group_by(Name,hour) %>%
+  summarise(Amount = sum(Amount)) %>%
+  arrange(Name,hour)
+head(ho2)
+
+ggplot(ho2,mapping = aes(x = hour,y=Amount,fill=Name)) +
+  geom_col() +
+  xlim(10,24) +
+  facet_wrap(~ Name) +
+  labs(x = "Hour of Day",y="Total Sales",title = "Total Sales Throughout Day for Each Store") +
+  theme(legend.position = "none") +
+  transition_states(hour, transition_length = 2, state_length = 1)
+
+anim_save("FirstGif.gif")
