@@ -1,0 +1,114 @@
+---
+title: "CS12"
+author: "matthewchapman"
+date: "2022-11-29"
+output: 
+  html_document:
+    keep_md: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,message = FALSE,warning = FALSE)
+```
+
+#### Libraries
+```{r}
+library(readr)
+library(lubridate)
+library(timetk)
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+library(tidyquant)
+library(dygraphs)
+library(timetk)
+library(ggplot2)
+library(gganimate)
+library(riem)
+library(leaflet)
+```
+
+#### Download Avocado Data
+```{r}
+avocado <- read_csv("avocado 2.csv")
+```
+
+
+### Fix Avocado Data
+```{r}
+unique(avocado$region)
+
+US <- avocado%>%
+  filter(region == 'TotalUS')
+
+cities <- c("Albany","Atlanta","Boise","Boston","BaltimoreWashington","BuffaloRochester","Charlotte","Chicago","CincinnatiDayton","Columbus","DallasFtWorth","Denver","Detroit","GrandRapids","HarrisburgScranton","HartfordSpringfield","Houston", "Indianapolis","Jacksonville","LasVegas","LosAngeles","Louisville","MiamiFtLauderdale","Nashville","NewOrleansMobile","Orlando","Philadelphia","PhoenixTucson","Pittsburgh","Portland","RaleighGreensboro","RichmondNorfolk","Roanoke","Sacramento","SanDiego","SanFrancisco","Seattle","Spokane","StLouis","Syracuse","Tampa")
+cities1 <- avocado%>%
+  filter(region %in% cities)
+
+states<- c("California","NewYork","SouthCarolina")
+states1 <- avocado%>%
+  filter(region %in% states)
+
+regions<- c("GreatLakes","Midsouth","Northeast","NorthernNewEngland","Plains","SouthCentral","Southeast","West","WestTexNewMexico")
+regions1 <- avocado%>%
+  filter(region %in% regions)
+```
+
+
+### US Avocado Prices
+```{r}
+Plot1 <- ggplot(US,mapping = aes(x = Date,y=AveragePrice)) +
+  geom_line() +
+  transition_reveal(Date) +
+  labs(title = "Average US Avocado Price",subtitle  = "Date: {frame_along}")
+Plot1
+```
+
+
+### Regional Avocado Prices
+```{r}
+Plot2 <- ggplot(regions1,mapping = aes(x=Date,y=AveragePrice,color=region,size=`Total Volume`)) +
+  geom_point() +
+  transition_reveal(Date) +
+  shadow_trail(distance = .01)+
+  labs(title = "Average US Avocado Price Across Regions",subtitle  = "Date: {frame_along}",color = "Region")
+Plot2
+```
+
+
+### City Avocado Prices
+```{r}
+cities2 <- cities1 %>%
+  group_by(region) %>%
+  mutate(avg2 = mean(AveragePrice)) %>%
+  arrange(avg2) %>% 
+  filter(avg2 < 1.2)
+unique(cities2$region)
+
+Plot3 <- ggplot(cities2,mapping = aes(x=Date,y=AveragePrice,color=region,size=`Total Volume`)) +
+  geom_point() +
+  geom_line(mapping = aes(x = Date,y=avg2),color="black")+
+  labs(title = "Average US Avocado Price Across Cities",color = "Region")+
+  facet_wrap(~region)
+Plot3
+```
+
+
+### Analyze Stock Prices
+```{r}
+stock<-tq_get(c("CVGW","AVO"), get="stock.prices",from=today()- years(2), to= today())
+
+stock1 <-stock%>%
+  select(symbol,date,adjusted)%>%
+  pivot_wider(names_from= symbol,values_from = adjusted) %>%
+  tk_xts(date_var = date) 
+
+dygraph(stock1, main = "Stock Prices for Avocado Companies") %>%
+  dyAxis("y",label="Price ($)") %>%
+  dyAxis("x",label='Date')
+```
+
+
+My first visualization shows the average avocado price in America throughout time. It appears that there is a sharp increase in the fall of each year and a sharp drop in the spring. The second visualization shows the average price across regions. It appears that the Western and Southern parts of the country have the cheapest Avocados. The third visual shows the top 6 cheapest cities for Avocados. It appears that Dallas and Houston have the cheapest Avoocados.
+
+The stock graph shows that CVGW is out performing AVO. However, the gap has shortned greatly in the last 2 years. CVGW also appears to have greater variance when it comes to the price. Both stocks show a trend of having its highest price during the Spring.
