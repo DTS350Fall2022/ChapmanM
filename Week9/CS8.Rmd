@@ -1,0 +1,128 @@
+---
+title: "CS8"
+author: "matthewchapman"
+date: "2022-10-28"
+output: 
+  html_document:
+    keep_md: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,message = FALSE,warning = FALSE)
+```
+
+### Libraries
+```{r}
+library(tidyverse) 
+library(downloader)
+library(dplyr)
+library(tidyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(lubridate)
+library(riem)
+```
+
+
+### Import Sales Data
+```{r}
+sales <- read_csv("https://github.com/WJC-Data-Science/DTS350/raw/master/sales.csv")
+head(sales)
+tail(sales)
+```
+
+## Format Data for Analysis
+```{r}
+sales1 <- sales %>%
+  with_tz(tz = "US/Mountain") %>%
+  mutate(day = ceiling_date(Time, "day"),
+         week = ceiling_date(Time, "week"),
+         month = ceiling_date(Time, "month"),
+         hour = ceiling_date(Time, "hour")) %>%
+  filter(Name != "Missing")
+head(sales1)
+```
+
+## Which Business is the best investment?
+#### Hours of Operation
+```{r}
+ho2 <- sales1 %>%
+  select(Name, Amount, hour) %>%
+  mutate(hour = hour(hour)) %>%
+  group_by(Name,hour) %>%
+  summarise(Amount = sum(Amount)) %>%
+  arrange(Name,hour)
+head(ho2)
+
+ggplot(ho2,mapping = aes(x = hour,y=Amount,fill=Name)) +
+  geom_col() +
+  xlim(10,24) +
+  facet_wrap(~ Name) +
+  labs(x = "Hour of Day",y="Total Sales",title = "Total Sales Throughout Day for Each Store") +
+  theme(legend.position = "none")
+```
+
+The plot indicates the stores all have their the bulk of their sales around noon. 11 AM to 4 PM seems to be the range with the most sales.
+#### Customer Traffic
+```{r}
+ggplot(ho2,mapping = aes(x = Name, y = Amount,fill = Name)) +
+  geom_col() +
+  labs(x = "Store Name",y = "Total Sales in ($)",title = "Total Sales ($) by Store")
+
+
+ggplot(sales1,mapping = aes(x = Name,fill = Name)) +
+  geom_bar(stat = "count") +
+  labs(x = "Store Name",y="Total Number of Sales",title = "Frequency of Sales by Store")
+
+ho3 <- sales1 %>%
+  select(Name, Amount, month) %>%
+  mutate(month = month(month)) %>%
+  group_by(Name,month) %>%
+  summarise(Amount = sum(Amount)) %>%
+  arrange(Name,month) %>%
+  filter(month > 5)
+print(ho3,n=100)
+head(ho3)
+
+ggplot(ho3,mapping = aes(x=month,y=Amount,fill=Name)) +
+  geom_col(position = "dodge") +
+  labs(x = "Month",y="Total Sales ($)",title = "Total Sales ($) for Each Store by Month")
+```
+
+The first plot shows that HotDiggity has the most sales in $. Frozone is the worst. LeBelle is a close second and the others are kind of in the middle. The second plot shows HotDiggity as the store with the most number of sales. However, LeBelle is almost last, this indicates that LeBelle has the most expensive prices. Other's are in somewhat similar spots. It is very insightful to see which stores make the most sales in dollars and which stores make the most sales in general. The last plot shows that July has the most sales. The stores seem to have similar numbers accross the months when compared to the other stores
+#### Final Comparison
+```{r}
+storehours <- sales1 %>%
+  mutate(hour = hour(hour),
+         day = day(day),
+         month = month(month)) %>%
+  select(Name,month,day,hour,Amount) %>%
+  group_by(Name,month,day,hour) %>%
+  summarise() %>%
+  arrange(Name,month,day,hour) %>%
+  ungroup() %>%
+  add_count(Name,name = 'StoreHoursTotal') %>%
+  group_by(Name,StoreHoursTotal) %>%
+  summarise()
+head(storehours) 
+
+totalsales <- sales1 %>%
+  select(Name,Amount) %>%
+  group_by(Name) %>%
+  summarise(SalesTotal = sum(Amount))
+head(totalsales)
+
+merge1 <- merge(storehours,totalsales,by = 'Name') %>%
+  mutate(SalesPerHour = SalesTotal/StoreHoursTotal) %>%
+  select(Name,SalesPerHour)
+merge1 
+
+ggplot(merge1,mapping = aes(x=Name,y=SalesPerHour,fill = Name)) +
+  geom_col() +
+  geom_text(label = round(merge1$SalesPerHour,digits = 2)) +
+  labs(x = "Store Name",y = "Sales per Hour ($)",title = "Average Sales per Hour by Store")
+  
+```
+
+After analyzing the data, I found that LeBelle was the most efficient of the stores. They had the second most total sales dollars, but the most in sales dollars per hour of business. I did this by taking each stores total sales and counting the number of hours each business had recorded got the average for each store. At 75.62 per hour, LaBelle is makes the most per hour of operation by almost a margin of 10 compared to the second best of HotDiggity.
