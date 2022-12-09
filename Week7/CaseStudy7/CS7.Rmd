@@ -25,25 +25,25 @@ library(foreign)
 ## Import Data
 ```{r}
 GC <- read_dta("https://github.com/WJC-Data-Science/DTS350/blob/master/germanconscr.dta?raw=true")
-GC
+
 
 GP <- read_dta("https://github.com/WJC-Data-Science/DTS350/blob/master/germanprison.dta?raw=true")
-GP
+
 
 EVW <- tempfile()
 download("https://github.com/WJC-Data-Science/DTS350/raw/master/Heights_south-east/B6090.DBF?raw=true", EVW,mode = "wb")
 EVW <- read.dbf(EVW)
-EVW
+
 
 heightscsv <- read_csv("https://raw.githubusercontent.com/hadley/r4ds/master/data/heights.csv",skip = 2,col_names = FALSE)
 d1 <- heightscsv %>%
   mutate(earn = X1, height = X2, sex = X3, ed = X4, age = X5, race = X6) %>%
   select(earn,height,sex,ed,age,race)
-d1
+
 
 WD=read.spss("http://www.ssc.wisc.edu/nsfh/wave3/NSFH3%20Apr%202005%20release/main05022005.sav", to.data.frame=TRUE)
 write.table(WD,"WD.csv")
-WD
+
 
 readLines("https://github.com/WJC-Data-Science/DTS350/raw/master/CaseStudy7Data/heights.csv",n=5)
 exceldata <- read_xlsx('Height.xlsx',skip = 2)
@@ -56,7 +56,6 @@ d <- exceldata %>%
   pivot_longer(cols =  ('1800':'2011'), names_to = "Year",values_to = "Height") %>%
   filter(!is.na(Height))
 names(d)[2] <- 'Country'
-d
 
 dd <- d %>%
   separate(Year, into = c("Century","Decade"),sep = -2) %>%
@@ -64,7 +63,7 @@ dd <- d %>%
   mutate(height.cm = Height, height.in = Height/2.54) %>%
   select(-Height) %>%
   arrange(Century,Decade,Year)
-dd
+
 write.csv(dd, "WorldEstimates", row.names = TRUE)
 ```
 
@@ -73,30 +72,29 @@ write.csv(dd, "WorldEstimates", row.names = TRUE)
 GC1 <- GC %>%
   mutate(height.cm = height, height.in = height/2.54,bYear = bdec, dataset = 'GC') %>%
   select(height.cm,height.in, bYear, dataset)
-GC1
-  
+
 GP1 <- GP %>%
   mutate(height.cm = height,height.in=height/2.54,bYear = bdec, dataset = 'GP') %>%
   select(height.cm,height.in, bYear, dataset)
-GP1
+
   
 EVW1 <- EVW %>%
   mutate(bYear = SJ, height.cm = CMETER, height.in = CMETER/2.54, dataset = 'EVW') %>%
   select(height.cm,height.in, bYear, dataset)
-EVW1
+
 
 WD1 <- WD %>%
   mutate(height.cm = RT216I*2.54, height.in = RT216I, bYear = as.numeric(DOBY)+1900, dataset = 'WD') %>%
   select(height.cm,height.in, bYear, dataset)
-WD1
+
 
 D11 <- d1 %>%
   mutate(height.in = height, height.cm = height*2.54, bYear = 1950, dataset = 'D11') %>%
   select(height.cm,height.in, bYear, dataset)
-D11
+
 
 joined <- bind_rows(GC1,GP1,EVW1,WD1,D11)
-joined
+
 
 write.csv(joined, "Individual.csv", row.names = TRUE)
 ```
@@ -122,10 +120,11 @@ joined1 <- joined %>%
   summarise(height = mean(height.in))
 joined1
 
-ggplot(data = joined1, mapping = aes(x = bYear, y = height)) +
+ggplot(data = joined, mapping = aes(x = bYear, y = height.in)) +
   geom_col() +
-  facet_wrap(~dataset,scales="free")
+  facet_wrap(~dataset,scales="free") +
+  labs(x = "Birth Year",y = 'Height')
 ```
 
 
-My first graphic with the World Estimates data shows a strong supporting arguement for the claim that people get taller throughout time. Besides the drop off in the mid-1800's, everything is in a upward, almost linear trend as time goes on. My second visualization however did not support this claim. I took the average height for each year and faceted it by study. The visualization doesn't show a trend in any direction for any study.
+My first graphic with the World Estimates data shows a strong supporting arguement for the claim that people get taller throughout time. Besides the drop off in the mid-1800's, everything is in a upward, almost linear trend as time goes on. My second visualization however did not support this claim. For the second visual, it can be observed in the Wisconsin Data table that there is indeed a correlation throughout time.
