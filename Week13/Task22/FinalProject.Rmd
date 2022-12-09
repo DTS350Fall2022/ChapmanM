@@ -1,0 +1,432 @@
+---
+title: "Final"
+author: "matthewchapman"
+date: "2022-11-29"
+output: 
+  html_document:
+    keep_md: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE)
+```
+
+##### Libraries
+```{r}
+library(tidyverse)
+library(downloader)
+library(readxl)
+library(dplyr)
+library(corrplot)
+library(plotly)
+library(maps)
+
+
+library(gapminder)
+
+library(readr)
+library(lubridate)
+library(timetk)
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+library(tidyquant)
+library(dygraphs)
+library(timetk)
+library(ggplot2)
+library(gganimate)
+library(riem)
+library(leaflet)
+```
+
+##### Download Data
+```{r}
+download.file("https://raw.githubusercontent.com/rashida048/Datasets/master/titanic_data.csv","titanic_data.csv")
+TitanicData <- read_csv("titanic_data.csv")
+```
+
+
+## Introduction
+I chose to do my final project on the Titanic Data Set. I chose this particular dataset because of it's popularity among young data scientists. It is one of the easiest datasets to begin with for learning to build a predictive model. I wanted to get familar with it so that I can do this myself in the near future, but also thought it would be a fun topic to do the project on.
+
+My Question is:
+What variables are most important for indicating whether or not someone survived the Titanic disaster?
+
+```{r}
+
+```
+
+
+# Exploring Relationships
+### Make cateogorical Data Numeric
+```{r}
+cor1 <- TitanicData %>%
+  mutate(Sex = case_when(
+    Sex == "male" ~ 1,
+    Sex == "female" ~ 2
+  )) %>%
+  mutate(Embarked = case_when(
+    Embarked == 'S' ~ 1,
+    Embarked == 'C' ~ 2,
+    Embarked == 'Q' ~ 3
+  )) %>%
+  select(Survived,Pclass,Sex,Age,SibSp,Parch,Fare,Embarked) %>%
+  drop_na()
+head(cor1)
+```
+## Corrplot
+```{r}
+cor2 <- cor(cor1)
+corrplot(cor2,method = 'color')
+corrplot(cor2,method = 'number')
+```
+
+#### Some correlations to note are:
+-Class & Fare Price: Class is cateogorical and is split into 3 categories of (1,2,3). Fare is numeric. There is a moderate negative correlation (-0.55) between the two variables. This indicates that as the price of the fare increases, class decreases. The assumption that higher fares are associated with 1st class (1) can already be made, but it is nice knowing that it is statistically correct as well.
+
+-Age & Class: Low negative correlation (-0.37). Indicates as Age increases, class decreases (closer to 1st class). This assumption can be made that older people have more money than younger passengers.
+
+
+#### The corrplot shows a few relationships when it comes to the 'Survived' variable:
+-Class: 'Class' has a low negative correlation (-0.36). Class gets worse (economically) as it increases. (1st class is 1, 2nd is 2, and 3rd is 3). Therefore, wealthier people are more likely to be part of first class. 'Survived' indicates that the passenger died (0) or survived (1), meaning the higher the variable, the better chances of survival. Therefore, the correlation indicates that as survival increases, class decreases. This indicates that wealthier people (people of 1st class), or more likely to survive
+
+-Sex: 'Sex' has a moderate positive correlation (0.54). As sex increases (man (1) to woman (2)), so does survival (death (1) to survival (2)). This indicates that women were more likely to survive.
+
+
+# Summary of Passengers
+```{r}
+AgeGender<-TitanicData%>%
+  select(Survived,Sex,Age) %>%
+  mutate(cat = case_when(
+    Age < 2 ~ 'Baby',
+    Age >= 2 & Age <5 ~ 'Toddler',
+    Age >= 5 & Age < 13 ~ 'Child',
+    Age >=13 & Age < 20 ~ 'Teen',
+    Age >= 20 & Age < 40 ~ 'Adult',
+    Age >= 40 & Age < 60 ~ 'MAA',
+    Age >= 60 ~ 'Senior'
+  )) %>%
+  filter(!is.na(Age)) %>%
+  group_by(Sex,cat) %>%
+  add_tally() %>%
+  mutate(TotalCat = n)%>%
+  select(-n) %>%
+  ungroup() %>%
+  group_by(Survived,Sex,cat) %>%
+  add_tally() %>%
+  mutate(TotalSurv = n) %>%
+  select(-n) %>%
+  ungroup() %>%
+  mutate(Rate = (TotalSurv/TotalCat)*100) %>%
+  mutate(Survived = case_when(
+    Survived == 0 ~ 'Died',
+    Survived == 1 ~ 'Survived'
+  )) %>%
+  mutate(Rate1 = Rate/TotalSurv) %>%
+  mutate(Sex = case_when(
+    Sex == 'female' ~ 'Female',
+    Sex == 'male' ~ 'Male'
+  ))
+```
+
+
+
+```{r}
+Cats <- c('Baby','Toddler','Child','Teen','Adult','MAA','Senior')
+P2 <- ggplot(AgeGender,aes(x = fct_relevel(cat,Cats),fill=Sex,text = paste("Count: ",TotalCat))) +
+  geom_bar(position = "dodge") +
+  labs(x = 'Age Category',y='Number of Passengers')
+ggplotly(P2,tooltip = "text")
+```
+Age Categories:
+  -Baby (0-2)
+  -Toddler (2-5)
+  -Child (5-13)
+  -Teen (13-20)
+  -Adult (20-40)
+  -MAA (40-60)
+  -Senior (60+)
+This plot shows that mostly Adults (Ages 20-40) were on board. Middle-Aged Adults the second most common age category. There appears to be an upwards trend until Adults, and a downwards trend following Adults. There are also more male passengers than female passengers in just about every age category.
+
+```{r}
+Embarked <- TitanicData%>%
+  select(Pclass,Survived,Sex,Age,Embarked) %>%
+  mutate(Embarked = case_when(
+    Embarked == 'C' ~ 'Cherbourg',
+    Embarked == 'Q' ~ 'Queenstown',
+    Embarked == 'S' ~ 'Southampton'
+  ))
+
+Embarked1 <- Embarked %>%
+  mutate(lat = case_when(
+    Embarked == "Southampton" ~  50.91,
+    Embarked == "Cherbourg" ~  49.63,
+    Embarked == "Queenstown" ~  51.85
+  )) %>%
+  mutate(long = case_when(
+    Embarked == "Southampton" ~  -1.40,
+    Embarked == "Cherbourg" ~  -1.62,
+    Embarked == "Queenstown" ~  -8.29
+  )) %>%
+  group_by(Embarked) %>%
+  add_tally() %>%
+  mutate(TotalEmbarked = n)%>%
+  select(-n) %>%
+  group_by(Pclass,Embarked)%>%
+  add_tally() %>%
+  ungroup()
+
+Embarked2<-Embarked1%>%
+  select(Pclass,Embarked,n) %>%
+  drop_na() %>%
+  unique()
+
+fclass<- filter(Embarked2,Pclass ==1) %>%
+  mutate(fclass = n) %>%
+  select(-n)
+
+sclass<- filter(Embarked2,Pclass ==2) %>%
+  mutate(sclass = n) %>%
+  select(-n)
+
+tclass<- filter(Embarked2,Pclass ==3) %>%
+  mutate(tclass = n) %>%
+  select(-n)
+
+merge1 <- merge(fclass,sclass,by = 'Embarked')
+merge2 <- merge(merge1,tclass,by='Embarked') %>%
+  select(Embarked,fclass,sclass,tclass)
+
+Embarked1<-merge(Embarked1,merge2,by = 'Embarked')
+
+pal <- colorFactor(c("#F01E2C", "#F94449","#C30010"), domain = c('Southampton','Cherbourg',"Queenstown"))
+
+leaflet(data = Embarked1) %>%
+  addTiles() %>%
+  addCircleMarkers(
+    radius = ~TotalEmbarked/50,
+    color = ~pal(Embarked),
+    popup = paste("<b>City<b>:", Embarked1$Embarked, "<br>",
+                  "Passengers: ", Embarked1$TotalEmbarked, "<br>",
+                  "First Class: ", Embarked1$fclass, "<br>",
+                  "Second Class: ", Embarked1$sclass, "<br>",
+                  "Third Class: ", Embarked1$tclass),
+    fillOpacity = 1000) 
+```
+
+This Map shows the 3 ports that the Titanic departed from. Southampton can be observed as the port with the largest number of passengers. A little of over half of the passengers from Southampton are third class. The remaining are split up somewhat evenly. The second largest port is Cherbourg, which had over half of its passengers in first class. The smallest port is Queenstown, which had 77 passengers and 72 of them were third class.
+
+```{r}
+cl <- TitanicData %>%
+  select(Pclass, Fare, Embarked) %>%
+  mutate(Pclass = case_when(
+    Pclass == 1 ~ 'First',
+    Pclass == 2 ~ 'Second',
+    Pclass == 3 ~ 'Third'
+  )) %>%
+  mutate(Embarked = case_when(
+    Embarked == 'C' ~ 'Cherbourg',
+    Embarked == 'Q' ~ 'Queenstown',
+    Embarked == 'S' ~ 'Southampton'
+  )) %>%
+  drop_na()
+
+cl1 <- cl %>%
+  select(Pclass,Fare)%>%
+  group_by(Pclass)%>%
+  add_tally() %>%
+  mutate(Fare1 = n,avgFare = mean(Fare))%>%
+  mutate(Fare = Fare1)%>%
+  select(-n,-Fare1)%>%
+  unique()
+
+P3<- ggplot() +
+  geom_col(cl1,mapping = aes(x = Pclass,y=Fare,fill = Pclass,text = paste("Total: ",cl1$Fare, "<br>",
+                                                                        "Avg Price: $",cl1$avgFare )),alpha = 2/5)+
+  geom_jitter(cl,mapping = aes(x = Pclass,y = Fare,color = Pclass)) +
+  theme(legend.position = "none") +
+  labs(x='Socio-Economic Class',y='Fare Price ($)',title = 'Frequency and Price of Fare by Class')
+ggplotly(P3,tooltip = "text")
+```
+
+The plot shows the volume of passengers, as well as fare price for each class. Third class is the largest, first class in the middle, and second class last largest. As expected, the price goes up as you get closer to First Class.
+
+
+
+
+# Analysis
+## Democgraphics
+```{r}
+Cats <- c('Baby','Toddler','Child','Teen','Adult','MAA','Senior')
+P1 <- ggplot(AgeGender,mapping = aes(x = fct_relevel(cat,Cats),y=Rate1,fill = Survived)) +
+  geom_col() +
+  facet_wrap(~Sex) +
+  labs(x = 'Age Category',y='Death/Survival Rate (%)',title = 'Death/Survival Rate by Age and Gender',fill='Outcome')
+P1
+```
+
+This plot shows the survival rate of passengers by their age category and gender. It can be observed that Females survived at a significanly higher rate than Males. For women, it appears that the survival rate for babies and seniors was 100%. All other cateogories seem to be similar. For men, the chances of survival decrease as age increases.
+
+
+```{r}
+Emb2 <- Embarked1%>%
+  group_by(Embarked) %>%
+  mutate(EmbarkedSurvived = sum(Survived)) %>%
+  select(Embarked,Pclass,Survived,TotalEmbarked,EmbarkedSurvived,lat,long) %>%
+  mutate(EmbarkedDied = TotalEmbarked-EmbarkedSurvived) %>%
+  mutate(EmbarkedSRate = EmbarkedSurvived/TotalEmbarked*100,EmbarkedDRate = 100-EmbarkedSRate)
+Emb2
+
+
+leaflet(data = Emb2) %>%
+  addTiles() %>%
+  addCircleMarkers(
+    radius = ~EmbarkedDRate/10,
+    color = ~pal(Embarked),
+    popup = paste("<b>City<b>:", Emb2$Embarked, "<br>",
+                  "Passengers Total: ", Emb2$TotalEmbarked, "<br>",
+                  "Survived Total: ", Emb2$EmbarkedSurvived, "<br>",
+                  "Died Total: ", Emb2$EmbarkedDied, "<br>",
+                  "Death Rate: ", Emb2$EmbarkedDRate),
+    fillOpacity = 1000) 
+```
+
+
+```{r}
+barked <- TitanicData%>%
+  select(Embarked,Pclass,Survived) %>%
+  mutate(Embarked = case_when(
+    Embarked == 'C' ~ 'Cherbourg',
+    Embarked == 'Q' ~ 'Queenstown',
+    Embarked == 'S' ~ 'Southampton'
+  )) %>%
+  mutate(Pclass = case_when(
+    Pclass == 1 ~ 'First',
+    Pclass == 2 ~ 'Second',
+    Pclass == 3 ~ 'Third'
+  )) %>%
+  group_by(Embarked,Pclass) %>%
+  add_tally()  %>%
+  mutate(TotalEmbarkedPclass = n) %>%
+  select(-n) %>%
+  ungroup() %>%
+  group_by(Embarked,Pclass)%>%
+  mutate(TotalEmbPclassSur = sum(Survived)) %>%
+  mutate(TotalEmbPclassSurPerc = TotalEmbPclassSur/TotalEmbarkedPclass*100) %>%
+  mutate(Death = 100-TotalEmbPclassSurPerc) %>%
+  select(-Survived)%>%
+  unique() %>%
+  drop_na()
+barked
+
+ggplot(barked,mapping = aes(x = Pclass,y = Death,fill = Pclass)) +
+  geom_col(position = "dodge") +
+  labs(x = 'Class',y = 'Death Rate (%)',title = 'Death Rate by Port & Class',subtitle = "Port: {closest_state}") +
+  transition_states(Embarked) +
+  theme(legend.position = "none")
+```
+
+
+```{r}
+  
+TT <- TitanicData %>%
+  select(Survived,Sex,Age,SibSp,Parch) %>%
+  mutate(alone = case_when(
+    SibSp == 0  & Parch == 0 ~ 'Alone',
+    SibSp > 0 | Parch > 0 ~ 'Family'
+  )) %>%
+  select(-SibSp,-Parch) %>%
+  drop_na() %>%
+  group_by(alone)%>%
+  add_tally()%>%
+  mutate(AloneTot = n,AloneDead = sum(Survived))%>%
+  select(-n) %>%
+  mutate(AloneSR = AloneDead/AloneTot*100) %>%
+  ungroup() %>%
+  group_by(Sex,alone) %>%
+  add_tally() %>%
+  mutate(AloneSexTot = n, AloneSexDead = sum(Survived)) %>%
+  select(-n) %>%
+  mutate(AloneSexSR = AloneSexDead/AloneSexTot*100) %>%
+  select(Sex,alone,AloneSR,AloneSexSR) %>%
+  unique()
+
+ggplot(TT,aes(x = alone, y= AloneSexSR,fill = Sex))+
+  geom_col(position = "dodge")
+```
+
+
+
+```{r}
+TTClean <- TitanicData %>%
+  mutate(cat = case_when(
+    Age < 2 ~ 'Baby',
+    Age >= 2 & Age <5 ~ 'Toddler',
+    Age >= 5 & Age < 13 ~ 'Child',
+    Age >=13 & Age < 20 ~ 'Teen',
+    Age >= 20 & Age < 40 ~ 'Adult',
+    Age >= 40 & Age < 60 ~ 'MAA',
+    Age >= 60 ~ 'Senior'
+  )) %>%
+  mutate(Survived = case_when(
+    Survived == 0 ~ 'Died',
+    Survived == 1 ~ 'Survived'
+  )) %>%
+  mutate(Sex = case_when(
+    Sex == 'female' ~ 'Female',
+    Sex == 'male' ~ 'Male'
+  )) %>%
+  mutate(Embarked = case_when(
+    Embarked == 'C' ~ 'Cherbourg',
+    Embarked == 'Q' ~ 'Queenstown',
+    Embarked == 'S' ~ 'Southampton'
+  )) %>%
+  mutate(Pclass = case_when(
+    Pclass == 1 ~ 'First',
+    Pclass == 2 ~ 'Second',
+    Pclass == 3 ~ 'Third'
+  )) %>%
+  select(Survived,Pclass,Sex,Embarked,cat)
+TTClean
+
+
+TTq <- TTClean %>%
+  select(Survived,cat,Sex,Pclass) %>%
+  mutate(Survived = case_when(
+    Survived == 'Died' ~ 0,
+    Survived == 'Survived' ~ 1
+  )) %>%
+  mutate(cat = case_when(
+    is.na(cat) ~ 'Unknown',
+    !is.na(cat) ~ cat
+  ))%>%
+  group_by(cat,Sex,Pclass) %>%
+  add_tally(name = 'CSCT') %>%
+  mutate(S = sum(Survived),D = CSCT-S) %>%
+  mutate(SR = S/CSCT*100,DR = D/CSCT*100) %>%
+  select(-Survived) %>%
+  unique()%>%
+  mutate(cat1 = paste(cat,Sex,Pclass)) %>%
+  arrange(DR)
+
+
+TTq1<-TTq%>%
+  filter(cat!='Unknown')%>%
+  mutate(group1 = case_when(
+    SR == 100 ~ "All Survived",
+    SR >= 50 & SR != 100 ~ "Mostly Survived",
+    SR < 50 & SR != 0 ~ "Mostly Died",
+    SR == 0 ~ 'All Died'
+  ))
+TTq1
+
+ggplot(TTq1,aes(fct_reorder(cat1,SR),SR,fill = Pclass)) +
+  geom_col(position = "dodge") +
+  facet_wrap(~Sex)
+
+ggplot(TTq1,aes(cat,Pclass,color = Sex)) +
+  geom_jitter() +
+  transition_states(group1) +
+  labs(title = "Outcome: {closest_state}")
+```
+
