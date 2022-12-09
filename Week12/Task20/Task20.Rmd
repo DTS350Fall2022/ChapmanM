@@ -32,6 +32,7 @@ library(gganimate)
 library(gifski)
 ```
 
+I chose to go back to Case Study 8 for Task20. I decided to do a transition between each stores daily hours and sales. I think it's a great way to be interactive with the graph while still showing the important message.
 
 ### Import Sales Data
 ```{r}
@@ -65,10 +66,8 @@ head(ho2)
 
 ggplot(ho2,mapping = aes(x = hour,y=Amount,fill=Name)) +
   geom_col() +
-  xlim(10,24) +
-  facet_wrap(~ Name) +
-  labs(x = "Hour of Day",y="Total Sales",title = "Total Sales Throughout Day for Each Store") +
-  theme(legend.position = "none") +
-  transition_states(hour, transition_length = 2, state_length = 1)
+  transition_states(Name) +
+  labs(x = "Hour of Day",y="Total Sales",title = "Total Sales Throughout Day for Each Store",subtitle = "Store: {closest_state}") +
+  theme(legend.position = "none")
 
 anim_save("FirstGif.gif")
